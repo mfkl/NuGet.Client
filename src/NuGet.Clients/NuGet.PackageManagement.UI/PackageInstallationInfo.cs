@@ -17,15 +17,26 @@ namespace NuGet.PackageManagement.UI
     public class PackageInstallationInfo : IComparable<PackageInstallationInfo>,
         INotifyPropertyChanged
     {
-        private NuGetVersion _version;
+        private NuGetVersion _versionInstalled;
+        private string _versionRequested;
 
         public NuGetVersion InstalledVersion
         {
-            get { return _version; }
+            get { return _versionInstalled; }
             set
             {
-                _version = value;
+                _versionInstalled = value;
                 OnPropertyChanged(nameof(InstalledVersion));
+            }
+        }
+
+        public string RequestedVersion
+        {
+            get { return _versionRequested; }
+            set
+            {
+                _versionRequested = value;
+                OnPropertyChanged(nameof(RequestedVersion));
             }
         }
 

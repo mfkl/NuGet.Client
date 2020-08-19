@@ -47,7 +47,8 @@ namespace NuGet.PackageManagement.UI
             _sortableColumns = new List<GridViewColumnHeader>
             {
                 _projectColumnHeader,
-                _versionColumnHeader
+                _versionColumnHeader,
+                _installedVersionColumnHeader
             };
 
             SortByColumn(_projectColumnHeader);
@@ -214,6 +215,12 @@ namespace NuGet.PackageManagement.UI
                 SortByColumn(sortableColumnHeader);
                 e.Handled = true;
             }
+        }
+
+        private void RequestedVersionColumnHeader_Loaded(object sender, RoutedEventArgs e)
+        {
+            var model = DataContext as PackageSolutionDetailControlModel;
+            _versionColumnHeader.Width = model.IsRequestedVisible ? _versionColumnHeader.Width : 0;
         }
     }
 }
