@@ -32,7 +32,6 @@ namespace NuGet.SolutionRestoreManager
         private const int IdleTimeoutMs = 400;
         private const int RequestQueueLimit = 150;
         private const int PromoteAttemptsLimit = 150;
-        private const int DelayAutoRestoreRetries = 50;
         private const int DelaySolutionLoadRetry = 100;
 
         private readonly object _lockPendingRequestsObj = new object();
@@ -477,8 +476,7 @@ namespace NuGet.SolutionRestoreManager
 
                         token.ThrowIfCancellationRequested();
 
-                        var retries = 0;
-
+                        DateTime lastNominationReceived = DateTime.UtcNow;
                         // Drains the queue
                         while (!_pendingRequests.Value.IsCompleted
                             && !token.IsCancellationRequested)
@@ -488,40 +486,43 @@ namespace NuGet.SolutionRestoreManager
                             // check if there are pending nominations
                             var isAllProjectsNominated = await _solutionManager.Value.IsAllProjectsNominatedAsync();
 
-                            if (!_pendingRequests.Value.TryTake(out next, IdleTimeoutMs, token))
+                            // Try to get a request without a timeout. We don't want to *block* the threadpool thread.
+                            if (!_pendingRequests.Value.TryTake(out next, millisecondsTimeout: 0, token))
                             {
                                 if (isAllProjectsNominated)
                                 {
                                     // if we've got all the nominations then continue with the auto restore
                                     break;
                                 }
-                            }
-
-                            // Upgrade request if necessary
-                            if (next != null && next.RestoreSource != request.RestoreSource)
-                            {
-                                // there could be requests of two types: Auto-Restore or Explicit
-                                // Explicit is always preferred.
-                                request = new SolutionRestoreRequest(
-                                    next.ForceRestore || request.ForceRestore,
-                                    RestoreOperationSource.Explicit);
-
-                                // we don't want to delay explicit solution restore request so just break at this time.
-                                break;
-                            }
-
-                            if (!isAllProjectsNominated)
-                            {
-                                if (retries >= DelayAutoRestoreRetries)
+                                else
                                 {
-                                    // we're still missing some nominations but don't delay it indefinitely and let auto restore fail.
-                                    // we wait until 20 secs for all the projects to be nominated at solution load.
+                                    // Break if we've waited for more than 10s without an actual nomination.
+                                    if (lastNominationReceived.AddSeconds(10.0) < DateTime.UtcNow)
+                                    {
+                                        // we're still missing some nominations but don't delay it indefinitely and let auto restore fail.
+                                        // we wait until 20 secs for all the projects to be nominated at solution load.
+                                        break;
+                                    }
+                                    // if we're still expecting some nominations and also haven't reached our max timeout
+                                    // then increase the retries count.
+                                    await Task.Delay(IdleTimeoutMs, token);
+                                }
+                            }
+                            else
+                            {
+                                lastNominationReceived = DateTime.UtcNow;
+                                // Upgrade request if necessary
+                                if (next != null && next.RestoreSource != request.RestoreSource)
+                                {
+                                    // there could be requests of two types: Auto-Restore or Explicit
+                                    // Explicit is always preferred.
+                                    request = new SolutionRestoreRequest(
+                                        next.ForceRestore || request.ForceRestore,
+                                        RestoreOperationSource.Explicit);
+
+                                    // we don't want to delay explicit solution restore request so just break at this time.
                                     break;
                                 }
-
-                                // if we're still expecting some nominations and also haven't reached our max timeout
-                                // then increase the retries count.
-                                retries++;
                             }
                         }
 
