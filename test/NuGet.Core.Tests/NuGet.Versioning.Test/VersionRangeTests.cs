@@ -10,6 +10,12 @@ namespace NuGet.Versioning.Test
 {
     public class VersionRangeTests
     {
+        [Fact]
+        public void AlwaysFail()
+        {
+            Assert.True(false);
+        }
+
         [Theory]
         [InlineData("1.0.0", "(>= 1.0.0)")]
         [InlineData("[1.0.0]", "(= 1.0.0)")]
