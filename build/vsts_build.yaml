@@ -737,7 +737,7 @@ jobs:
 
   - task: ShellScript@2
     displayName: "Run Tests"
-    continueOnError: ${{ not(eq(variables["IsOfficialBuild"], 'false')) }}
+    continueOnError: ${{ not(eq(variables['IsOfficialBuild'], 'false')) }}
     inputs:
       scriptPath: "scripts/funcTests/runFuncTests.sh"
       disableAutoCwd: "true"
