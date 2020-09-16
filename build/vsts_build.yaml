@@ -266,7 +266,7 @@ jobs:
 
   - task: MSBuild@1
     displayName: "Run unit tests"
-    continueOnError: $[ not(eq(variables['IsOfficialBuild'], 'true')) ]
+    continueOnError: $(IsOfficialBuild)
     inputs:
       solution: "build\\build.proj"
       msbuildVersion: "16.0"
