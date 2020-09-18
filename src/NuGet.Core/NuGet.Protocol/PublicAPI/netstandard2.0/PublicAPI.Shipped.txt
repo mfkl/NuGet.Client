@@ -603,6 +603,7 @@ NuGet.Protocol.LocalPackageFileCache.GetOrAddNuspec(string manifestPath, string 
 NuGet.Protocol.LocalPackageFileCache.GetOrAddRuntimeGraph(string expandedPath) -> System.Lazy<NuGet.RuntimeModel.RuntimeGraph>
 NuGet.Protocol.LocalPackageFileCache.GetOrAddSha512(string sha512Path) -> System.Lazy<string>
 NuGet.Protocol.LocalPackageFileCache.LocalPackageFileCache() -> void
+NuGet.Protocol.LocalPackageFileCache.LocalPackageFileCache(bool updateLastWriteTime) -> void
 NuGet.Protocol.LocalPackageFileCache.Sha512Exists(string sha512Path) -> bool
 NuGet.Protocol.LocalPackageInfo
 NuGet.Protocol.LocalPackageInfo.LocalPackageInfo() -> void
