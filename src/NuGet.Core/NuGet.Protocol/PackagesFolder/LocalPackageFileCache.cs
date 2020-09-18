@@ -39,8 +39,15 @@ namespace NuGet.Protocol
         private readonly ConcurrentDictionary<string, Lazy<RuntimeGraph>> _runtimeCache
             = new ConcurrentDictionary<string, Lazy<RuntimeGraph>>(PathUtility.GetStringComparerBasedOnOS());
 
+        private readonly bool _updateLastWriteTime;
+
         public LocalPackageFileCache()
         {
+        }
+
+        public LocalPackageFileCache(bool updateLastWriteTime)
+        {
+            _updateLastWriteTime = updateLastWriteTime;
         }
 
         /// <summary>
@@ -78,6 +85,8 @@ namespace NuGet.Protocol
         /// <summary>
         /// True if the path exists on disk. This also uses
         /// the SHA512 cache for already read files.
+        /// Potentially updates the last write time of the file,
+        /// depending on how LocalPackageFileCache was created.
         /// </summary>
         public bool Sha512Exists(string sha512Path)
         {
@@ -90,6 +99,16 @@ namespace NuGet.Protocol
                 // The file exists, add it to the cache
                 _fileExistsCache.TryAdd(sha512Path, true);
                 exists = true;
+            }
+
+            if(exists && _updateLastWriteTime)
+            {
+                var now = DateTime.UtcNow;
+
+                if ((now - File.GetLastWriteTimeUtc(sha512Path)).TotalDays > 1.0)
+                {
+                    File.SetLastWriteTimeUtc(sha512Path, now);
+                }
             }
 
             return exists;

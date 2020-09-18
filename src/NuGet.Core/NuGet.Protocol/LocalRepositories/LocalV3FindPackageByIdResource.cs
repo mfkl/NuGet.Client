@@ -50,7 +50,7 @@ namespace NuGet.Protocol
             {
                 if (_packageFileCache == null)
                 {
-                    _packageFileCache = new LocalPackageFileCache();
+                    _packageFileCache = new LocalPackageFileCache(updateLastWriteTime: true);
                 }
 
                 return _packageFileCache;
