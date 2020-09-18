@@ -50,7 +50,7 @@ namespace NuGet.Repositories
         {
             RepositoryRoot = path;
             PathResolver = new VersionFolderPathResolver(path);
-            _packageFileCache = packageFileCache ?? new LocalPackageFileCache();
+            _packageFileCache = packageFileCache ?? new LocalPackageFileCache(updateLastWriteTime: true);
             _isFallbackFolder = isFallbackFolder;
         }
 
