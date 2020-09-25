@@ -111,7 +111,7 @@ namespace NuGet.Protocol
                 }
             }
 
-            return exists;
+           return exists;
         }
 
         /// <summary>
