@@ -478,7 +478,7 @@ Function RunRestore(
     {
         $staticGraphOutputValue = "N/A"
     }
-
+    
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
     $logs = . $nugetClientFilePath $arguments | Out-String
@@ -501,6 +501,15 @@ Function RunRestore(
     $folderPath = $Env:NUGET_PACKAGES
     $globalPackagesFolderNupkgFilesInfo = GetFilesInfo(GetPackageFiles $folderPath)
     $globalPackagesFolderFilesInfo = GetFilesInfo(GetFiles $folderPath)
+
+    Log "NUGET_PACKAGES $folderPath"
+
+    $file = [System.IO.Path]::Combine($folderPath, "newtonsoft.json\12.0.3\.nupkg.metadata")
+    Log "File to set last write $file"
+    if([System.IO.File]::Exists($file))
+    {
+        [System.IO.File]::SetLastWriteTimeUtc($file, (Get-Date).AddDays(-2))
+    }   
 
     $folderPath = $Env:NUGET_HTTP_CACHE_PATH
     $httpCacheFilesInfo = GetFilesInfo(GetFiles $folderPath)

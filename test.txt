@@ -1,0 +1,1 @@
+.\RunPerformanceTests.ps1 -nugetClientFilePath ..\..\artifacts\NuGet.CommandLine\16.0\bin\Debug\net472\NuGet.exe -solutionFilePath ..\..\..\test-project\test-project.csproj -resultsFilePath result.txt -skipCleanRestores -skipColdRestores -skipForceRestores
