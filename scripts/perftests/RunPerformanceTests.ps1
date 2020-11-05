@@ -182,6 +182,8 @@ Try
     If (!$skipWarmup)
     {
         Log "Running 1x warmup restore"
+        [System.IO.File]::AppendAllText("C:\\Users\\Martin\\Desktop\\log.txt", "WARMUP RESTORE STARTING");
+
         $enabledSwitches = @("cleanGlobalPackagesFolder", "cleanHttpCache", "cleanPluginsCache", "killMSBuildAndDotnetExeProcess")
         If ($isPackagesConfig)
         {
@@ -193,6 +195,7 @@ Try
         }
         $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $solutionName $testRunId "warmup" -enabledSwitches $enabledSwitches
         RunRestore @arguments
+        [System.IO.File]::AppendAllText("C:\\Users\\Martin\\Desktop\\log.txt", "WARMUP RESTORE DONE");
     }
 
     If (!$skipCleanRestores)
@@ -242,6 +245,8 @@ Try
     If (!$skipNoOpRestores)
     {
         Log "Running $($iterationCount)x no-op restores"
+        [System.IO.File]::AppendAllText("C:\\Users\\Martin\\Desktop\\log.txt", "NOOP RESTORE STARTING");
+
         If ($staticGraphRestore)
         {
             $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $solutionName $testRunId "noop" -enabledSwitches @("staticGraphRestore")
@@ -251,6 +256,7 @@ Try
             $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $solutionName $testRunId "noop"
         }
         1..$iterationCount | % { RunRestore @arguments }
+        [System.IO.File]::AppendAllText("C:\\Users\\Martin\\Desktop\\log.txt", "NOOP RESTORE DONE");
     }
 
     Log "Completed the performance measurements for $solutionFilePath.  Results are in $resultsFilePath." "green"

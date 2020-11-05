@@ -90,6 +90,11 @@ namespace NuGet.Protocol
         /// </summary>
         public bool Sha512Exists(string sha512Path)
         {
+            lock (this)
+            {
+                File.AppendAllText(@"C:\Users\Martin\Desktop\log.txt", $"PID:{System.Diagnostics.Process.GetCurrentProcess().Id} DateTime:{DateTime.Now}, Sha512Exists:{sha512Path}" + Environment.NewLine);
+            }
+
             // Avoid checking the desk if we have already read the file.
             var exists = _fileExistsCache.ContainsKey(sha512Path);
 
@@ -107,6 +112,8 @@ namespace NuGet.Protocol
 
                 if ((now - File.GetLastWriteTimeUtc(sha512Path)).TotalDays > 1.0)
                 {
+                    System.Diagnostics.StackTrace t = new System.Diagnostics.StackTrace();
+                    File.AppendAllText(@"C:\Users\Martin\Desktop\log.txt", t.ToString());
                     File.SetLastWriteTimeUtc(sha512Path, now);
                 }
             }
