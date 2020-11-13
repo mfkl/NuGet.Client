@@ -101,7 +101,9 @@ namespace NuGet.Protocol
                 exists = true;
             }
 
-            if(exists && _updateLastWriteTime)
+#pragma warning disable CA1307  
+            if(exists && _updateLastWriteTime && !sha512Path.Contains("NuGetFallbackFolder") && !sha512Path.Contains("UWPNuGetPackages"))
+#pragma warning restore CA1307  
             {
                 var now = DateTime.UtcNow;
 
