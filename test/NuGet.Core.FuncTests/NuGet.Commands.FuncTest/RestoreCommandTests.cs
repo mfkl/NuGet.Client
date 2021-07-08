@@ -1345,6 +1345,49 @@ namespace NuGet.Commands.FuncTest
             }
         }
 
+        [Fact]
+        public async Task RestoreCommand_UpdatePackageLastWriteTimeAsync()
+        {
+            // Arrange
+            var sources = new List<PackageSource>
+            {
+                new PackageSource(NuGetConstants.V3FeedUrl)
+            };
+
+            using (var packagesDir = TestDirectory.Create())
+            using (var projectDir = TestDirectory.Create())
+            {
+                var specPath = Path.Combine(projectDir, "TestProject", "project.json");
+                var spec = JsonPackageSpecReader.GetPackageSpec(BasicConfig.ToString(), "TestProject", specPath).EnsureProjectJsonRestoreMetadata();
+
+                AddDependency(spec, "NuGet.Versioning", "1.0.7");
+
+                var logger = new TestLogger();
+                var request = new TestRestoreRequest(spec, sources, packagesDir, logger)
+                {
+                    LockFilePath = Path.Combine(projectDir, "project.lock.json")
+                };
+
+                var command = new RestoreCommand(request);
+                var firstRun = await command.ExecuteAsync();
+
+                // Act
+                var fileToUpdate = Path.Combine(packagesDir, @"nuget.versioning\1.0.7\.nupkg.metadata");
+
+                var twoDaysAgo = DateTime.UtcNow.AddDays(-2);
+                File.SetLastWriteTimeUtc(fileToUpdate, twoDaysAgo);
+
+                Assert.Equal(twoDaysAgo.Day, File.GetLastWriteTimeUtc(fileToUpdate).Date.Day);
+
+                request = new TestRestoreRequest(spec, sources, packagesDir, logger);
+                command = new RestoreCommand(request);
+
+                var result = await command.ExecuteAsync();
+
+                Assert.Equal(DateTime.UtcNow.Day, File.GetLastWriteTimeUtc(fileToUpdate).Date.Day);
+            }
+        }
+
         [Theory]
         [InlineData(NuGetConstants.V2FeedUrl)]
         [InlineData(NuGetConstants.V3FeedUrl)]
