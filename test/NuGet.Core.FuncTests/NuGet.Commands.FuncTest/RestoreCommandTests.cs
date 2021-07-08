@@ -1388,6 +1388,57 @@ namespace NuGet.Commands.FuncTest
             }
         }
 
+        [Fact]
+        public async Task RestoreCommand_ClearCacheAsync()
+        {
+            // Arrange
+            var sources = new List<PackageSource>
+            {
+                new PackageSource(NuGetConstants.V3FeedUrl)
+            };
+
+            using (var packagesDir = TestDirectory.Create())
+            using (var projectDir = TestDirectory.Create())
+            {
+                var lockFilePath = Path.Combine(projectDir, "project.lock.json");
+                var specPath = Path.Combine(projectDir, "TestProject", "project.json");
+                var spec = JsonPackageSpecReader.GetPackageSpec(BasicConfig.ToString(), "TestProject", specPath).EnsureProjectJsonRestoreMetadata();
+
+                AddDependency(spec, "NuGet.Versioning", "1.0.7");
+
+                var logger = new TestLogger();
+                var request = new TestRestoreRequest(spec, sources, packagesDir, logger)
+                {
+                    LockFilePath = lockFilePath
+                };
+
+                var command = new RestoreCommand(request);
+                var initialInstall = await command.ExecuteAsync();
+
+                var oldPackageVersion = Path.Combine(packagesDir, @"nuget.versioning\1.0.7\.nupkg.metadata");
+
+                // Make the NuGet.Versioning 1.0.7 package not touched for 31 days
+                var thirtyOneDaysAgo = DateTime.UtcNow.AddDays(-31);
+                File.SetLastWriteTimeUtc(oldPackageVersion, thirtyOneDaysAgo);
+
+                // Upgrade
+                spec.Dependencies.Clear();
+
+                AddDependency(spec, "NuGet.Versioning", "3.2.0");
+
+                request = new TestRestoreRequest(spec, sources, packagesDir, logger)
+                {
+                    LockFilePath = lockFilePath
+                };
+
+                command = new RestoreCommand(request);
+                var upgrade = await command.ExecuteAsync();
+
+                // Assert
+                Assert.False(File.Exists(oldPackageVersion));
+            }
+        }
+
         [Theory]
         [InlineData(NuGetConstants.V2FeedUrl)]
         [InlineData(NuGetConstants.V3FeedUrl)]
