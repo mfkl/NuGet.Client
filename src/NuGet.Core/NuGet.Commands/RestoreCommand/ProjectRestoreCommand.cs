@@ -330,6 +330,8 @@ namespace NuGet.Commands
                 downloadDependencyInformations.
                     SelectMany(ddi => ddi.Install.Where(match => uniquePackages.Add(match.Library))));
 
+            ClearCache(userPackageFolder.RepositoryRoot);
+
             var success = true;
 
             if (packagesToInstall.Count > 0)
@@ -364,6 +366,27 @@ namespace NuGet.Commands
             }
 
             return success;
+        }
+
+        private void ClearCache(string repositoryRoot)
+        {
+            var nupkgMetadata = ".nupkg.metadata";
+            var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+            var packagesToDelete = new List<string>();
+
+            foreach (var package in Directory.GetDirectories(repositoryRoot))
+            {
+                foreach(var version in Directory.GetDirectories(package))
+                {
+                    var file = Path.Combine(version, nupkgMetadata);
+                    var lastWrite = File.GetLastWriteTimeUtc(file);
+                    if (lastWrite < thirtyDaysAgo)
+                        packagesToDelete.Add(version);
+                }
+            }
+
+            foreach (var package in packagesToDelete)
+                Directory.Delete(package, recursive: true);
         }
 
         private async Task<bool> InstallPackageAsync(RemoteMatch installItem, NuGetv3LocalRepository userPackageFolder, PackageExtractionContext packageExtractionContext, CancellationToken token)
